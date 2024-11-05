@@ -1,72 +1,83 @@
-import React, { useState } from "react";
+import React, { useState} from "react";
 import NoteContext from "./noteContext";
 // import { useState } from "react";
 
 const NoteState = (props)=>{
-    const notesInitial = [
-        {
-          "_id": "6720c08085abc6abc626848e",
-          "user": "671f46e87979c08b815d2a3d",
-          "title": "Python Programing Start",
-          "description": "Python is a easy to lern and less syntax",
-          "tag": "Public",
-          "date": "2024-10-29T11:01:20.193Z",
-          "__v": 0
-        },
-        {
-            "_id": "6720c08085abc6abc626848e",
-            "user": "671f46e87979c08b815d2a3d",
-            "title": "Python Programing Start",
-            "description": "Python is a easy to lern and less syntax",
-            "tag": "Public",
-            "date": "2024-10-29T11:01:20.193Z",
-            "__v": 0
-          },
-          {
-            "_id": "6720c08085abc6abc626848e",
-            "user": "671f46e87979c08b815d2a3d",
-            "title": "Python Programing Start",
-            "description": "Python is a easy to lern and less syntax",
-            "tag": "Public",
-            "date": "2024-10-29T11:01:20.193Z",
-            "__v": 0
-          },
-          {
-            "_id": "6720c08085abc6abc626848e",
-            "user": "671f46e87979c08b815d2a3d",
-            "title": "Python Programing Start",
-            "description": "Python is a easy to lern and less syntax",
-            "tag": "Public",
-            "date": "2024-10-29T11:01:20.193Z",
-            "__v": 0
-          },
-          {
-            "_id": "6720c08085abc6abc626848e",
-            "user": "671f46e87979c08b815d2a3d",
-            "title": "Python Programing Start",
-            "description": "Python is a easy to lern and less syntax",
-            "tag": "Public",
-            "date": "2024-10-29T11:01:20.193Z",
-            "__v": 0
-          },
-          {
-            "_id": "6720c08085abc6abc626848e",
-            "user": "671f46e87979c08b815d2a3d",
-            "title": "Python Programing Start",
-            "description": "Python is a easy to lern and less syntax",
-            "tag": "Public",
-            "date": "2024-10-29T11:01:20.193Z",
-            "__v": 0
-          },
-      ]    
-
+  const host = "http://localhost:1000"
+    const notesInitial = []    
     const [notes, setNotes] = useState(notesInitial)
 
+//Get All Notes
+    const getNotes = async () =>{
+      const responce = await fetch(`${host}/api/notes/fetchallnotes`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'auth-token': localStorage.getItem('token')
+        },
+    });
+    const json = await responce.json()
+    setNotes(json);
+  }
+    // Add a Note
+const addNote = async (title, description, tag) =>{
+  const responce = await fetch(`${host}/api/notes/addnote`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'auth-token': localStorage.getItem('token')
+    },
+    body: JSON.stringify(title, description, tag)
+});
+const note= await responce.json();
+setNotes(notes.concat(note));
+}
+    // Delete a Note
+const deleteNote = async (id) =>{
+  const responce = await fetch(`${host}/api/notes/deletenote/${id}`, {
+    method: 'DELETE',
+    headers: {
+        'Content-Type': 'application/json',
+        'auth-token': localStorage.getItem('token')
+    },
+});
+ const json = responce.json();
+ console.log(json)
+    const newNotes = notes.filter((note)=>{return note._id!==id})
+    setNotes(newNotes)
+}
+    //Edit a Note
+const editNote = async (id, title, description, tag) =>{
+  const responce = await fetch(`${host}/api/notes/updatenote/${id}`, {
+    method: 'PUT',
+    headers: {
+        'Content-Type': 'application/json',
+        'auth-token': localStorage.getItem('token')
+    },
+    body: JSON.stringify(title, description, tag)
+});
+const json = await responce.json();
+console.log(json)
+
+let newNotes =JSON.parse(JSON.stringify(notes))
+  for (let index = 0; index < newNotes.length; index++) {
+    const element = newNotes[index];
+    if(element._id === id){
+      newNotes[index].title = title;
+      newNotes[index].description = description;
+      newNotes[index].tag = tag;
+      break;
+    }
+  }
+  setNotes(newNotes);
+}
+
     return(
-        <NoteContext.Provider value= {{notes, setNotes}}>
+        <NoteContext.Provider value= {{notes, addNote, deleteNote, editNote, getNotes}}>
             {props.children}
         </NoteContext.Provider>        
     )
 }
+
 
 export default NoteState;

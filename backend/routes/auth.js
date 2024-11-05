@@ -19,10 +19,11 @@ router.post(
     }),
   ],
   async (req, res) => {
+    let success = false;
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({success, errors: errors.array() });
     }
 
     try {
@@ -31,7 +32,7 @@ router.post(
       if (existingUser) {
         return res
           .status(400)
-          .json({ error: "User with this email already exists" });
+          .json({success, error: "User with this email already exists" });
       }
 
       // Hash the password
@@ -56,10 +57,11 @@ router.post(
       const authtoken = jwt.sign(data, JWT_SECRET);
 
       // Respond with the created user and token
-      res.json({ user, authtoken });
+      success = true;
+      res.json({success, user, authtoken });
     } catch (err) {
       console.error(err.message);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({success, error: "Internal Server Error" });
     }
   }
 );
@@ -73,6 +75,7 @@ router.post(
     body("password", "Password cannot be blank").exists(),
   ],
   async (req, res) => {
+    let success = false;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -87,9 +90,10 @@ router.post(
       }
       const passwordCompare = await bcrypt.compare(password, user.password);
       if (!passwordCompare) {
+        success = false;
         return res
           .status(400)
-          .json({ error: "Please try to login with correct credentials" });
+          .json({success, error: "Please try to login with correct credentials" });
       }
       const data = {
         user: {
@@ -98,7 +102,8 @@ router.post(
       };
       // Sign the JWT token
       const authtoken = jwt.sign(data, JWT_SECRET);
-      res.json({ authtoken });
+      success = true;
+      res.json({success, authtoken });
     } catch (err) {
       console.error(err.message);
       res.status(500).json({ error: "Internal Server Error" });
